@@ -1,0 +1,6 @@
+name: ItemCollectibles
+version: '${project.version}'
+main: group.aelysium.itemcollectibles.ItemCollectibles
+api-version: 1.16
+authors: [ Sivin ]
+depend: [ ProtocolLib ]
