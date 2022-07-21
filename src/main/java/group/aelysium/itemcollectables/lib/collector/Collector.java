@@ -1,5 +1,13 @@
-package group.aelysium.itemcollectibles.lib.collectible.models;
+package group.aelysium.itemcollectibles.lib.collector;
 
+import group.aelysium.itemcollectibles.ItemCollectables;
+import group.aelysium.itemcollectibles.lib.MySQL;
+import group.aelysium.itemcollectibles.lib.collectible.models.Bag;
+import group.aelysium.itemcollectibles.lib.collectible.models.Family;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,6 +21,37 @@ public class Collector {
 
     public Collector(UUID uuid) {
         this.uuid = uuid;
+    }
+
+    public static void saveCollectableInBag(MySQL mySQL, UUID uuid, String collectableName) {
+        try {
+            Connection conn = mySQL.getConnection();
+
+            PreparedStatement request = conn.prepareStatement(
+                    "INSERT INTO " +
+                            "player_collectables(uuid, collectable_name)" +
+                            "VALUES(?, ?);"
+            );
+            request.setString(0,uuid.toString());
+            request.setString(1,collectableName);
+            request.execute();
+        } catch (SQLException e) {
+            ItemCollectables.log("Unable to save Collectable to the players bag!");
+        }
+    }
+
+    public static void delete(MySQL mySQL, UUID uuid) {
+        try {
+            Connection conn = mySQL.getConnection();
+
+            PreparedStatement request = conn.prepareStatement(
+                    "DELETE FROM player_collectables WHERE uuid='?';"
+            );
+            request.setString(0,uuid.toString());
+            request.execute();
+        } catch (SQLException e) {
+            ItemCollectables.log("Unable to empty that player's bags!");
+        }
     }
 
     /**
@@ -33,6 +72,17 @@ public class Collector {
     public Bag findBag(Family family) {
         Optional<Bag> response = bags.stream().filter(bag -> Objects.equals(bag.family, family)).findFirst();
         return response.orElse(null);
+    }
+
+    /**
+     * Check if this collector is already registered
+     * @param family The family that the bag is associated with
+     * @return boolean
+     */
+    public boolean hasBag(Family family) {
+        Optional<Bag> response = bags.stream().filter(bag -> Objects.equals(bag.family, family)).findFirst();
+        if(response.isPresent()) return true;
+        return false;
     }
 
 
@@ -56,7 +106,7 @@ public class Collector {
     }
 
     /**
-     * Check if the family category contains this collectible
+     * Check if this collector is already registered
      * @param uuid The UUID of the collector to look for
      * @return boolean
      */

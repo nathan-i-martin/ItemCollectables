@@ -1,27 +1,25 @@
 package group.aelysium.itemcollectibles.lib.collectible.events;
 
-import group.aelysium.itemcollectibles.ItemCollectibles;
+import group.aelysium.itemcollectibles.ItemCollectables;
+import group.aelysium.itemcollectibles.lib.MySQL;
 import group.aelysium.itemcollectibles.lib.collectible.models.Bag;
-import group.aelysium.itemcollectibles.lib.collectible.models.Collector;
+import group.aelysium.itemcollectibles.lib.collector.Collector;
 import group.aelysium.itemcollectibles.lib.collectible.models.Family;
-import group.aelysium.itemcollectibles.lib.gui.models.GUI;
-import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import static group.aelysium.itemcollectibles.ItemCollectibles.log;
+import static group.aelysium.itemcollectibles.ItemCollectables.log;
 
 public class OnItemPickup implements Listener {
-    private ItemCollectibles itemCollectibles;
+    private ItemCollectables itemCollectables;
+    private MySQL mySQL;
 
-    public OnItemPickup(ItemCollectibles itemCollectibles) {
-        this.itemCollectibles = itemCollectibles;
+    public OnItemPickup(ItemCollectables itemCollectables, MySQL mySQL) {
+        this.itemCollectables = itemCollectables;
+        this.mySQL = mySQL;
     }
 
     // Check for clicks on items
@@ -37,7 +35,7 @@ public class OnItemPickup implements Listener {
 
         if(!Collector.contains(player.getUniqueId())) return;
 
-        if(!OnItemPickup.handleCollector(itemName,familyName,player)) return;
+        if(!OnItemPickup.handleCollector(this.mySQL, itemName, familyName, player)) return;
 
         event.setCancelled(true);
     }
@@ -64,7 +62,7 @@ public class OnItemPickup implements Listener {
         return true;
     }
 
-    static boolean handleCollector(String itemName, String familyName, Player player) {
+    static boolean handleCollector(MySQL mySQL, String collectableName, String familyName, Player player) {
         Collector collector;
         if(Collector.contains(player.getUniqueId())) collector = Collector.find(player.getUniqueId());
         else {
@@ -74,14 +72,15 @@ public class OnItemPickup implements Listener {
 
         Family family = Family.find(familyName);
         if(family == null) {
-            ItemCollectibles.log("There is no family with the name: "+ familyName +"!");
+            ItemCollectables.log("There is no family with the name: "+ familyName +"!");
             return false;
         }
 
         Bag bag = collector.findBag(family);
-        if(bag == null) bag = collector.holdBag(new Bag(familyName));
+        if(bag == null) bag = collector.holdBag(new Bag(family));
 
-        bag.add(itemName);
+        bag.add(collectableName);
+        Collector.saveCollectableInBag(mySQL, collector.uuid, collectableName);
 
         return true;
     }

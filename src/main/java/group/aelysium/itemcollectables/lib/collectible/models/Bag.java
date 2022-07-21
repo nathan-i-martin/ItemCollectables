@@ -1,13 +1,23 @@
 package group.aelysium.itemcollectibles.lib.collectible.models;
 
+import group.aelysium.itemcollectibles.ItemCollectables;
+import group.aelysium.itemcollectibles.lib.MySQL;
+import group.aelysium.itemcollectibles.lib.collector.Collector;
+import org.bukkit.Location;
+import org.bukkit.Material;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 public class Bag {
     public List<String> collectibles;
     public Family family;
 
-    public Bag(String name) {
-        this.family = new Family(name);
+    public Bag(Family family) {
+        this.family = family;
     }
 
     /**

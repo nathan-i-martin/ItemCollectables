@@ -1,6 +1,6 @@
 package group.aelysium.itemcollectibles.lib.gui.events;
 
-import group.aelysium.itemcollectibles.ItemCollectibles;
+import group.aelysium.itemcollectibles.ItemCollectables;
 import group.aelysium.itemcollectibles.lib.gui.models.GUI;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
@@ -9,10 +9,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class OnInventoryClick implements Listener {
-    private ItemCollectibles itemCollectibles;
+    private ItemCollectables itemCollectables;
 
-    public OnInventoryClick(ItemCollectibles screenControl) {
-        this.itemCollectibles = itemCollectibles;
+    public OnInventoryClick(ItemCollectables itemCollectables) {
+        this.itemCollectables = itemCollectables;
     }
 
     // Check for clicks on items
@@ -21,7 +21,7 @@ public class OnInventoryClick implements Listener {
 
         if(!OnInventoryClick.verify(event)) return;
 
-        ((GUI) event.getInventory().getHolder()).execute(event,this.itemCollectibles);
+        ((GUI) event.getInventory().getHolder()).execute(event,this.itemCollectables);
 
         event.setCancelled(true);
     }

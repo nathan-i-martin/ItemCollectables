@@ -1,0 +1,22 @@
+{
+    "collectables": {
+        "green crystal": {
+            "gui": {
+                "slot-index": "1",
+                "lore": ""
+            },
+            "location": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "world": "world",
+                "active-radius": 10.0
+            },
+            "material": "STONE",
+            "enchanted": true,
+            "glowing": true,
+            "custom-model-data": 0,
+            "family-name": "family1"
+        }
+    }
+}

@@ -1,16 +1,16 @@
 package group.aelysium.itemcollectibles.lib.gui.events;
 
-import group.aelysium.itemcollectibles.ItemCollectibles;
+import group.aelysium.itemcollectibles.ItemCollectables;
 import group.aelysium.itemcollectibles.lib.gui.models.GUI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
 public class OnInventoryDrag implements Listener {
-    private ItemCollectibles itemCollectibles;
+    private ItemCollectables itemCollectables;
 
-    public OnInventoryDrag(ItemCollectibles itemCollectibles) {
-        this.itemCollectibles = itemCollectibles;
+    public OnInventoryDrag(ItemCollectables itemCollectables) {
+        this.itemCollectables = itemCollectables;
     }
 
     // Cancel dragging in our inventory
