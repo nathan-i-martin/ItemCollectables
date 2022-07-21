@@ -1,10 +1,8 @@
-package group.aelysium.itemcollectibles.lib.collectible.models;
+package group.aelysium.itemcollectables.lib.collectible.models;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.lib.MySQL;
-import group.aelysium.itemcollectibles.lib.gui.models.GUI;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.lib.MySQL;
+import group.aelysium.itemcollectables.lib.gui.models.GUI;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

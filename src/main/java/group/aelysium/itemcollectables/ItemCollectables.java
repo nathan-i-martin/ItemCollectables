@@ -1,32 +1,24 @@
-package group.aelysium.itemcollectibles;
+package group.aelysium.itemcollectables;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import group.aelysium.itemcollectibles.commands.ItemCollectablesCommand;
-import group.aelysium.itemcollectibles.init.ConfigLoader;
-import group.aelysium.itemcollectibles.init.ModelLoader;
-import group.aelysium.itemcollectibles.lib.MySQL;
-import group.aelysium.itemcollectibles.lib.collectible.events.OnItemPickup;
-import group.aelysium.itemcollectibles.lib.collectible.models.Collectable;
-import group.aelysium.itemcollectibles.lib.generic.PluginType;
-import group.aelysium.itemcollectibles.lib.gui.events.OnInventoryClick;
-import group.aelysium.itemcollectibles.lib.gui.events.OnInventoryDrag;
-import org.bukkit.Bukkit;
+import group.aelysium.itemcollectables.commands.ItemCollectablesCommand;
+import group.aelysium.itemcollectables.init.ConfigLoader;
+import group.aelysium.itemcollectables.init.ModelLoader;
+import group.aelysium.itemcollectables.lib.MySQL;
+import group.aelysium.itemcollectables.lib.collectible.events.OnItemPickup;
+import group.aelysium.itemcollectables.lib.generic.PluginType;
+import group.aelysium.itemcollectables.lib.gui.events.OnInventoryClick;
+import group.aelysium.itemcollectables.lib.gui.events.OnInventoryDrag;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Item;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.sql.DataSource;
 import java.io.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public final class ItemCollectables extends JavaPlugin implements Listener {
     private PluginType pluginType;
@@ -79,7 +71,7 @@ public final class ItemCollectables extends JavaPlugin implements Listener {
      * Register the plugin's config files
      */
     public void registerConfigs() {
-        ItemCollectables.log("Registering configs...");
+        ItemCollectables.log("Initalizing plugin...");
 
         ConfigLoader.loadRootConfig(this.configs, this);
 
@@ -114,13 +106,13 @@ public final class ItemCollectables extends JavaPlugin implements Listener {
      */
     public static JsonObject createCustomConfig(String configName) {
         File customConfigFile = new File(ItemCollectables.getProvidingPlugin(ItemCollectables.class).getDataFolder(), configName); // Load the custom config from the plugins data file
-        log("Searching for "+configName);
+        log("> > " + "Searching for "+configName);
         if (!customConfigFile.exists()) { // Check if the custom config actually exists
-            log(configName + " could not be found. Making it now!");
+            log("> > " + configName + " could not be found. Making it now!");
             ItemCollectables.getProvidingPlugin(ItemCollectables.class).saveResource(configName, false); // If it doesn't, create it
-            log(configName + " was successfully generated!");
+            log("> > " + configName + " was successfully generated!");
         } else {
-            log(configName + " was found!");
+            log("> > " + configName + " was found!");
         }
 
         if (customConfigFile.exists()) { // Re-check if the custom config exists
@@ -128,10 +120,10 @@ public final class ItemCollectables extends JavaPlugin implements Listener {
                 Gson gson = new Gson();
                 return gson.fromJson(new FileReader(customConfigFile), JsonObject.class);
             } catch (FileNotFoundException e) {
-                log(configName + " could not be loaded!");
+                log("> > " + configName + " could not be loaded!");
             }
         } else {
-            log(configName + " still doesn't exist!");
+            log("> > " + configName + " still doesn't exist!");
         }
         return null;
     }

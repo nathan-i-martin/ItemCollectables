@@ -1,18 +1,19 @@
-package group.aelysium.itemcollectibles.lib;
+package group.aelysium.itemcollectables.lib;
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
-import group.aelysium.itemcollectibles.ItemCollectables;
+import group.aelysium.itemcollectables.ItemCollectables;
 import org.bukkit.Bukkit;
 
 import javax.sql.DataSource;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class MySQL {
@@ -35,28 +36,26 @@ public class MySQL {
     /**
      * Tests the connection to the provided MySQL server
      */
-    public boolean connect() {
+    public void connect() {
         MysqlDataSource dataSource = new MysqlConnectionPoolDataSource();
-        dataSource.setServerName(this.host);
-        dataSource.setPortNumber(this.port);
-        dataSource.setDatabaseName(this.database);
-        dataSource.setUser(this.user);
-        dataSource.setPassword(this.password);
+                        dataSource.setServerName(this.host);
+                        dataSource.setPortNumber(this.port);
+                        dataSource.setDatabaseName(this.database);
+                        dataSource.setUser(this.user);
+                        dataSource.setPassword(this.password);
 
         try {
-            Connection conn = dataSource.getConnection();
-            if (!conn.isValid(1000)) {
-                ItemCollectables.log("Unable to connect to the database!");
-                Bukkit.getPluginManager().disablePlugin(ItemCollectables.getProvidingPlugin(ItemCollectables.class));
-            } else {
+            Connection connection = dataSource.getConnection();
+            if (connection.isValid(1000)) {
                 this.dataSource = dataSource;
-                return true;
+            } else {
+                ItemCollectables.log("> > Unable to connect to the database!");
+                Bukkit.getPluginManager().disablePlugin(ItemCollectables.getProvidingPlugin(ItemCollectables.class));
             }
         } catch (SQLException e) {
-            ItemCollectables.log("Unable to connect to the database!");
+            ItemCollectables.log("> > Unable to connect to the database!");
             Bukkit.getPluginManager().disablePlugin(ItemCollectables.getProvidingPlugin(ItemCollectables.class));
         }
-        return false;
     }
 
     /**
@@ -77,23 +76,36 @@ public class MySQL {
      * Initializes the database
      */
     public void init(ItemCollectables itemCollectables) {
-        try {
-            InputStream stream = ItemCollectables.getResourceAsStream("dbsetup.sql",itemCollectables);
-            String setup = new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n"));
+        ItemCollectables.log("> Beginning database setup...");
 
-            String[] queries = setup.split(";");
+        List<String> scripts = new ArrayList<String>(4);
+                     scripts.add(0,"drop_tables");
+                     scripts.add(1,"families");
+                     scripts.add(2,"collectables");
+                     scripts.add(3,"player_collectables");
 
-            for (String query : queries) {
-                if (query.isEmpty()) continue;
-                try (Connection conn = this.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.execute();
+        scripts.forEach(script -> {
+            try {
+                ItemCollectables.log("> > Preparing database setup request...");
+                InputStream stream = ItemCollectables.getResourceAsStream("dbsetup/"+script+".sql",itemCollectables);
+                String setup = new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n"));
+
+                String[] queries = setup.split(";");
+
+                ItemCollectables.log("> > Issuing database setup request...");
+                for (String query : queries) {
+                    if (query.isEmpty()) continue;
+                    try (Connection conn = this.getConnection();
+                         PreparedStatement request = conn.prepareStatement(query)) {
+                        request.execute();
+                    }
                 }
+                ItemCollectables.log("> > Database setup complete!");
+            } catch (Exception e) {
+                ItemCollectables.log("Could not init the database!");
+                e.printStackTrace();
             }
-            ItemCollectables.log("Database setup complete.");
-        } catch (Exception e) {
-            ItemCollectables.log("Could not init the database!");
-        }
+        });
         return;
     }
 }

@@ -1,9 +1,9 @@
-package group.aelysium.itemcollectibles.lib.collector;
+package group.aelysium.itemcollectables.lib.collector;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.lib.MySQL;
-import group.aelysium.itemcollectibles.lib.collectible.models.Bag;
-import group.aelysium.itemcollectibles.lib.collectible.models.Family;
+import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.lib.MySQL;
+import group.aelysium.itemcollectables.lib.collectible.models.Bag;
+import group.aelysium.itemcollectables.lib.collectible.models.Family;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

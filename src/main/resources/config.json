@@ -1,0 +1,10 @@
+{
+    "database": {
+        "host": "localhost",
+        "port": "3306",
+        "database": "database",
+        "user": "username",
+        "password": "password"
+    },
+    "type": "ROOT"
+}

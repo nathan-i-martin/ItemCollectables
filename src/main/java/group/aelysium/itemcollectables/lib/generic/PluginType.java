@@ -1,4 +1,4 @@
-package group.aelysium.itemcollectibles.lib.generic;
+package group.aelysium.itemcollectables.lib.generic;
 
 public enum PluginType{
     ROOT,

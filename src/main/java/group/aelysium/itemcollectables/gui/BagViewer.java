@@ -1,8 +1,8 @@
-package group.aelysium.itemcollectibles.gui;
+package group.aelysium.itemcollectables.gui;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.lib.collectible.models.Family;
-import group.aelysium.itemcollectibles.lib.gui.models.GUI;
+import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.lib.collectible.models.Family;
+import group.aelysium.itemcollectables.lib.gui.models.GUI;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
 public class BagViewer extends GUI {

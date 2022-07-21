@@ -1,6 +1,6 @@
-package group.aelysium.itemcollectibles.lib.gui.models;
+package group.aelysium.itemcollectables.lib.gui.models;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
+import group.aelysium.itemcollectables.ItemCollectables;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryClickEvent;

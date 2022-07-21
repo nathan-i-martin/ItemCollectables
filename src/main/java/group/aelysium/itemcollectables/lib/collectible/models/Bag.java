@@ -1,16 +1,6 @@
-package group.aelysium.itemcollectibles.lib.collectible.models;
+package group.aelysium.itemcollectables.lib.collectible.models;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.lib.MySQL;
-import group.aelysium.itemcollectibles.lib.collector.Collector;
-import org.bukkit.Location;
-import org.bukkit.Material;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.List;
-import java.util.UUID;
 
 public class Bag {
     public List<String> collectibles;

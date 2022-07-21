@@ -1,6 +1,15 @@
-name: ItemCollectibles
+name: ItemCollectables
 version: '${project.version}'
-main: group.aelysium.itemcollectibles.ItemCollectibles
+main: group.aelysium.itemcollectables.ItemCollectables
 api-version: 1.16
 authors: [ Sivin ]
 depend: [ ProtocolLib ]
+commands:
+  ItemCollectables:
+    description: Used to manage ItemCollectables
+    usage: /ItemCollectables
+    permission: ItemCollectables.ItemCollectables
+  bag:
+    description: Open your own bag
+    usage: /bag
+    permission: ItemCollectables.bag

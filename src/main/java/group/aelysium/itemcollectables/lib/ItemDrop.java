@@ -1,4 +1,4 @@
-package group.aelysium.itemcollectibles.lib;
+package group.aelysium.itemcollectables.lib;
 
 public class ItemDrop {
 }

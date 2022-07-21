@@ -1,17 +1,17 @@
-package group.aelysium.itemcollectibles.lib.collectible.events;
+package group.aelysium.itemcollectables.lib.collectible.events;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.lib.MySQL;
-import group.aelysium.itemcollectibles.lib.collectible.models.Bag;
-import group.aelysium.itemcollectibles.lib.collector.Collector;
-import group.aelysium.itemcollectibles.lib.collectible.models.Family;
+import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.lib.MySQL;
+import group.aelysium.itemcollectables.lib.collectible.models.Bag;
+import group.aelysium.itemcollectables.lib.collector.Collector;
+import group.aelysium.itemcollectables.lib.collectible.models.Family;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 
-import static group.aelysium.itemcollectibles.ItemCollectables.log;
+import static group.aelysium.itemcollectables.ItemCollectables.log;
 
 public class OnItemPickup implements Listener {
     private ItemCollectables itemCollectables;

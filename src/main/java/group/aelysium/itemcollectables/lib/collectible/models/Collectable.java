@@ -1,7 +1,7 @@
-package group.aelysium.itemcollectibles.lib.collectible.models;
+package group.aelysium.itemcollectables.lib.collectible.models;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.lib.MySQL;
+import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.lib.MySQL;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;

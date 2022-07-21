@@ -1,40 +1,43 @@
-package group.aelysium.itemcollectibles.init;
+package group.aelysium.itemcollectables.init;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.gui.BagViewer;
-import group.aelysium.itemcollectibles.lib.MySQL;
-import group.aelysium.itemcollectibles.lib.collectible.models.Collectable;
-import group.aelysium.itemcollectibles.lib.collectible.models.Family;
-import group.aelysium.itemcollectibles.lib.generic.PluginType;
+import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.gui.BagViewer;
+import group.aelysium.itemcollectables.lib.MySQL;
+import group.aelysium.itemcollectables.lib.collectible.models.Collectable;
+import group.aelysium.itemcollectables.lib.collectible.models.Family;
+import group.aelysium.itemcollectables.lib.generic.PluginType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Item;
 
 import java.util.Map;
 
 public class ConfigLoader {
 
     public static boolean loadRootConfig(Map<String, JsonObject> configs, ItemCollectables itemCollectables) {
-        ItemCollectables.log("Preparing config.json...");
+        ItemCollectables.log("> Preparing config.json...");
         configs.put("config", ItemCollectables.createCustomConfig("config.json"));
         {
-            JsonObject playersJSON = configs.get("database").getAsJsonObject();
-            assert !playersJSON.isJsonObject() : "You must provide database information!";
-
             try {
-                String host =       playersJSON.get("host").getAsString();
-                int    port =       playersJSON.get("port").getAsInt();
-                String database =   playersJSON.get("database").getAsString();
-                String user =       playersJSON.get("user").getAsString();
-                String password =   playersJSON.get("password").getAsString();
+                ItemCollectables.log("> > Loading database info...");
+                JsonObject databaseJSON = configs.get("config").getAsJsonObject("database");
+                assert !databaseJSON.isJsonObject() : "You must provide database information!";
+
+                String host =       databaseJSON.get("host").getAsString();
+                int    port =       databaseJSON.get("port").getAsInt();
+                String database =   databaseJSON.get("database").getAsString();
+                String user =       databaseJSON.get("user").getAsString();
+                String password =   databaseJSON.get("password").getAsString();
 
                 itemCollectables.setMySQL(new MySQL(host, port, database, user, password));
 
-                String pluginType = playersJSON.get("type").getAsString();
+                ItemCollectables.log("> > Loading plugin type info...");
+                String pluginType = configs.get("config").get("type").getAsString();
 
+                ItemCollectables.log("> > Setting plugin type...");
                 itemCollectables.setPluginType(PluginType.valueOf(pluginType));
             } catch (Exception e) {
                 ItemCollectables.log("Unable to register config.yml! Make sure you are using valid json!");
@@ -46,11 +49,11 @@ public class ConfigLoader {
     }
 
     public static boolean saveCollectables(Map<String, JsonObject> configs, MySQL mySQL) {
-        configs.put("collectables", ItemCollectables.createCustomConfig("collectables.json"));
-
         ItemCollectables.log("> Registering collectables.json...");
+
+        configs.put("collectables", ItemCollectables.createCustomConfig("collectables.json"));
         // Get screens config
-        JsonObject collectiblesJSON = configs.get("collectables").getAsJsonObject();
+        JsonObject collectiblesJSON = configs.get("collectables").getAsJsonObject("collectables");
         assert !collectiblesJSON.isJsonObject() : "Your config file is corrupt! Are you sure that you've balanced your brackets?";
         {
             for (Map.Entry<String, JsonElement> collectibleEntry : collectiblesJSON.entrySet()) {
@@ -110,11 +113,11 @@ public class ConfigLoader {
     }
 
     public static boolean saveFamilies(Map<String, JsonObject> configs, MySQL mySQL) {
-        configs.put("families", ItemCollectables.createCustomConfig("families.json"));
-
         ItemCollectables.log("> Registering families.json...");
+
+        configs.put("families", ItemCollectables.createCustomConfig("families.json"));
         // Get screens config
-        JsonObject familiesJSON = configs.get("families").getAsJsonObject();
+        JsonObject familiesJSON = configs.get("families").getAsJsonObject("families");
         assert !familiesJSON.isJsonObject() : "Your config file is corrupt! Are you sure that you've balanced your brackets? Failed before parsing families!";
         {
             ItemCollectables.log("> > Registering families...");

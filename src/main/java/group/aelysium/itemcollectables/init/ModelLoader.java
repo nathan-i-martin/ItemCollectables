@@ -1,11 +1,11 @@
-package group.aelysium.itemcollectibles.init;
+package group.aelysium.itemcollectables.init;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.lib.MySQL;
-import group.aelysium.itemcollectibles.lib.collectible.models.Bag;
-import group.aelysium.itemcollectibles.lib.collectible.models.Collectable;
-import group.aelysium.itemcollectibles.lib.collectible.models.Family;
-import group.aelysium.itemcollectibles.lib.collector.Collector;
+import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.lib.MySQL;
+import group.aelysium.itemcollectables.lib.collectible.models.Bag;
+import group.aelysium.itemcollectables.lib.collectible.models.Collectable;
+import group.aelysium.itemcollectables.lib.collectible.models.Family;
+import group.aelysium.itemcollectables.lib.collector.Collector;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;

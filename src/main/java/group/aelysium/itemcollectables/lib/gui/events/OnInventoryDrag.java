@@ -1,7 +1,7 @@
-package group.aelysium.itemcollectibles.lib.gui.events;
+package group.aelysium.itemcollectables.lib.gui.events;
 
-import group.aelysium.itemcollectibles.ItemCollectables;
-import group.aelysium.itemcollectibles.lib.gui.models.GUI;
+import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.lib.gui.models.GUI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryDragEvent;

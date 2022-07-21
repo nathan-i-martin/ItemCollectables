@@ -1,0 +1,7 @@
+
+CREATE TABLE IF NOT EXISTS families
+(
+    name VARCHAR(36) NOT NULL,
+    guiRows INT(2) NOT NULL DEFAULT 3,
+    PRIMARY KEY (name)
+);
