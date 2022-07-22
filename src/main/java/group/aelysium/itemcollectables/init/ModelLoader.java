@@ -49,7 +49,10 @@ public class ModelLoader {
                 String familyName =     response.getString("family_name");
 
                 Family family = Family.find(familyName);
-                if(family == null) throw new NullPointerException();
+                if(family == null) {
+                    ItemCollectables.log("You have collectables that are referencing families that don't exist!");
+                    throw new NullPointerException();
+                }
 
                 Collectable collectable = new Collectable(
                         name,
@@ -141,9 +144,6 @@ public class ModelLoader {
 
                     String collectableName = response.getString("collectable_name");
                     String familyName = response.getString("family_name");
-
-                    ItemCollectables.log(collectableName);
-                    ItemCollectables.log(familyName);
 
                     Family family = Family.find(familyName);
                     if(family == null) throw new NullPointerException();

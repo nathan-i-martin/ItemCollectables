@@ -33,8 +33,8 @@ public class Family {
         this.name = name;
         this.guiRows = guiRows;
 
-        this.item = GUI.createItem(familyItemMaterial, false, familyItemCMD, this.name, "Click to view");
-        this.itemIfMissingCollectable = GUI.createItem(missingGUIItemMaterial, false, missingGUIItemCMD, this.name, "Click to view");
+        this.item = GUI.createItem(familyItemMaterial, false, familyItemCMD, this.name, "");
+        this.itemIfMissingCollectable = GUI.createItem(missingGUIItemMaterial, false, missingGUIItemCMD, "Unknown", "You haven't found this collectable yet!");
     }
 
     public static void openFamilySelectorGUI(Player player) {

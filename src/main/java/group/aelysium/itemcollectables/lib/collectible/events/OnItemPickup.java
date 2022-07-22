@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.sql.SQLException;
+import java.util.Objects;
 
 import static group.aelysium.itemcollectables.ItemCollectables.log;
 
@@ -32,9 +33,13 @@ public class OnItemPickup implements Listener {
     public void onItemPickup(final PlayerAttemptPickupItemEvent event) {
         Item item = event.getItem();
         Player player = event.getPlayer();
-        player.getInventory().remove(item.getItemStack());
 
         if(!OnItemPickup.verify(item)) return;
+
+        try {
+            Material itemMaterial = Objects.requireNonNull(item.getItemStack().getData()).getItemType();
+            player.getInventory().remove(itemMaterial);
+        } catch (Exception e) {}
 
         String itemName   = item.getMetadata("collectible-name").get(0).asString();
         String familyName = item.getMetadata("collectible-family").get(0).asString();
@@ -42,9 +47,9 @@ public class OnItemPickup implements Listener {
         Collector collector = Collector.getReliably(player.getUniqueId(), mySQL);
 
         if(OnItemPickup.handleCollector(this.mySQL, itemName, familyName, collector)) {
-            player.sendMessage(ChatColor.GRAY + "It seems you've already found this collectable...");
-        } else {
             player.sendMessage(ChatColor.AQUA + "You found a collectable! Use "+ChatColor.BLUE+"/bag "+ChatColor.AQUA+"to check it out!");
+        } else {
+            player.sendMessage(ChatColor.GRAY + "It seems you've already found this collectable...");
         }
 
     }

@@ -88,7 +88,7 @@ public class Collectable {
 
         Item item = this.location.getWorld().dropItem(location,this.item);
              if(this.isGlowing) item.setGlowing(true);
-             item.setPickupDelay(100);
+             item.setPickupDelay(40);
 
              item.setMetadata("collectible-name",   new FixedMetadataValue(ItemCollectables.getProvidingPlugin(ItemCollectables.class),this.name));
              item.setMetadata("collectible-family", new FixedMetadataValue(ItemCollectables.getProvidingPlugin(ItemCollectables.class),family.name));
