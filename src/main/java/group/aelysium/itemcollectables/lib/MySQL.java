@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,14 +25,7 @@ public class MySQL {
     private String user;
     private String password;
 
-    public MySQL(String host, int port, String database, String user, String password) {
-        this.host = host;
-        this.port = port;
-        this.database = database;
-        this.user = user;
-        this.password = password;
-    }
-
+    public MySQL() {}
 
     /**
      * Tests the connection to the provided MySQL server
@@ -59,7 +53,18 @@ public class MySQL {
     }
 
     /**
-     * Get's the connection
+     * Sets the connection
+     */
+    public void setConnection(String host, int port, String database, String user, String password) {
+        this.host = host;
+        this.port = port;
+        this.database = database;
+        this.user = user;
+        this.password = password;
+    }
+
+    /**
+     * Gets the connection
      */
     public Connection getConnection() {
         try {
@@ -75,7 +80,7 @@ public class MySQL {
     /**
      * Initializes the database
      */
-    public void init(ItemCollectables itemCollectables) {
+    public void init(ItemCollectables itemCollectables) throws ExceptionInInitializerError {
         ItemCollectables.log("> Beginning database setup...");
 
         List<String> scripts = new ArrayList<String>(4);
@@ -84,28 +89,35 @@ public class MySQL {
                      scripts.add(2,"collectables");
                      scripts.add(3,"player_collectables");
 
-        scripts.forEach(script -> {
-            try {
+        try {
+            scripts.forEach(script -> {
                 ItemCollectables.log("> > Preparing database setup request...");
-                InputStream stream = ItemCollectables.getResourceAsStream("dbsetup/"+script+".sql",itemCollectables);
+                InputStream stream = ItemCollectables.getResourceAsStream(script+".sql",itemCollectables);
                 String setup = new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n"));
 
                 String[] queries = setup.split(";");
 
                 ItemCollectables.log("> > Issuing database setup request...");
                 for (String query : queries) {
-                    if (query.isEmpty()) continue;
-                    try (Connection conn = this.getConnection();
-                         PreparedStatement request = conn.prepareStatement(query)) {
+                    if (query.replaceAll("\\s","").isEmpty()) continue;
+
+                    try {
+                        Connection connection = this.getConnection();
+                        PreparedStatement request = connection.prepareStatement(query);
                         request.execute();
+                    } catch (Exception e) {
+                                e.printStackTrace();
+                                ItemCollectables.log("Could not init the database!");
+                                throw new ExceptionInInitializerError();
                     }
                 }
-                ItemCollectables.log("> > Database setup complete!");
-            } catch (Exception e) {
-                ItemCollectables.log("Could not init the database!");
-                e.printStackTrace();
-            }
-        });
+                ItemCollectables.log("> > Request completed!");
+            });
+        } catch (Exception e) {
+            ItemCollectables.log("Could not init the database!");
+            throw new ExceptionInInitializerError();
+        }
+        ItemCollectables.log("Successfully initialized the database!");
         return;
     }
 }

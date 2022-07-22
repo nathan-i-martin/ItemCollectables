@@ -5,7 +5,7 @@ import group.aelysium.itemcollectables.lib.MySQL;
 import group.aelysium.itemcollectables.lib.collectible.models.Bag;
 import group.aelysium.itemcollectables.lib.collectible.models.Collectable;
 import group.aelysium.itemcollectables.lib.collectible.models.Family;
-import group.aelysium.itemcollectables.lib.collector.Collector;
+import group.aelysium.itemcollectables.lib.collector.models.Collector;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -19,15 +19,20 @@ import java.util.List;
 import java.util.UUID;
 
 public class ModelLoader {
-    public static void loadCollectables(MySQL mySQL) {
-        try {
-            Connection conn = mySQL.getConnection();
+    public static void loadCollectables(MySQL mySQL) throws ExceptionInInitializerError {
+        ItemCollectables.log("Loading collectables from database...");
 
-            PreparedStatement request = conn.prepareStatement("SELECT * FROM collectables;");
+        try {
+            ItemCollectables.log("> Making database request...");
+            Connection connection = mySQL.getConnection();
+
+            PreparedStatement request = connection.prepareStatement("SELECT * FROM collectables;");
             ResultSet response = request.executeQuery();
 
+            ItemCollectables.log("> > Processing database response...");
+
             while (response.next()) {
-                String name =           response.getString("name");
+                String name =           response.getString("collectable_name");
                 String lore =           response.getString("lore");
                 Integer guiSlotIndex =  response.getInt("gui_slot_index");
                 String material =       response.getString("material");
@@ -62,51 +67,66 @@ public class ModelLoader {
             }
             ItemCollectables.log("Loaded collectables successfully!");
         } catch (SQLException e) {
-            ItemCollectables.log("Unable to load collectables!");
+            throw new ExceptionInInitializerError();
         }
     }
 
-    public static void loadFamilies(MySQL mySQL) {
+    public static void loadFamilies(MySQL mySQL) throws ExceptionInInitializerError {
+        ItemCollectables.log("Loading families from database...");
         try {
-            Connection conn = mySQL.getConnection();
+            ItemCollectables.log("> Making database request...");
+            Connection connection = mySQL.getConnection();
 
-            PreparedStatement request = conn.prepareStatement("SELECT * FROM families;");
+            PreparedStatement request = connection.prepareStatement("SELECT * FROM families;");
             ResultSet response = request.executeQuery();
 
+            ItemCollectables.log("> > Processing database response...");
             while (response.next()) {
-                String name =  response.getString("name");
+                String name = response.getString("family_name");
                 Integer guiRows = response.getInt("gui_rows");
+                Material familyItemMaterial = Material.getMaterial(response.getString("family_icon_material"));
+                Integer familyItemCMD = response.getInt("family_icon_CMD");
+                Material missingGUIItemMaterial = Material.getMaterial(response.getString("gui_missing_item_material"));
+                Integer missingGUIItemCMD = response.getInt("gui_missing_item_CMD");
 
                 Family family = new Family(
                         name,
-                        guiRows
+                        guiRows,
+                        familyItemMaterial,
+                        familyItemCMD,
+                        missingGUIItemMaterial,
+                        missingGUIItemCMD
                 );
 
                 Family.register(family);
             }
             ItemCollectables.log("Loaded families successfully!");
         } catch (SQLException e) {
-            ItemCollectables.log("Unable to load families!");
+            throw new ExceptionInInitializerError();
         }
     }
 
-    public static void loadCollectors(MySQL mySQL) {
+    public static void loadCollectors(MySQL mySQL) throws ExceptionInInitializerError {
+        ItemCollectables.log("Loading collectors from database...");
         List<? extends Player> players = Bukkit.getOnlinePlayers().stream().toList();
 
         Connection connection = mySQL.getConnection();
 
+        ItemCollectables.log("> Making database request...");
         players.forEach(player -> {
             try {
                 PreparedStatement request = connection.prepareStatement(
                         "SELECT * FROM player_collectables " +
-                                "WHERE uuid = ? " +
-                                "OUTER JOIN collectables " +
-                                "ON player_collectables.collectable_name=collectables.name;"
+                                "INNER JOIN collectables " +
+                                "USING(collectable_name) " +
+                                "WHERE uuid = ?;"
                 );
-                request.setString(0,player.getUniqueId().toString());
+                request.setString(1,player.getUniqueId().toString());
                 ResultSet response = request.executeQuery();
 
-                if(response.getFetchSize() == 0) return;
+                if(!response.isBeforeFirst()) return;
+
+                ItemCollectables.log("> > Processing database response...");
 
                 while (response.next()) {
                     UUID uuid = UUID.fromString(response.getString("uuid"));
@@ -116,11 +136,14 @@ public class ModelLoader {
                         collector = Collector.find(uuid);
                     } else {
                         collector = new Collector(uuid);
-                        Collector.add(collector);
+                        Collector.register(collector);
                     }
 
                     String collectableName = response.getString("collectable_name");
                     String familyName = response.getString("family_name");
+
+                    ItemCollectables.log(collectableName);
+                    ItemCollectables.log(familyName);
 
                     Family family = Family.find(familyName);
                     if(family == null) throw new NullPointerException();
@@ -138,10 +161,11 @@ public class ModelLoader {
 
                     bag.add(collectableName);
                 }
+
+                ItemCollectables.log("Loaded collectors successfully!");
             } catch (SQLException e) {
-                ItemCollectables.log("Unable to load collectors!");
+                throw new ExceptionInInitializerError();
             }
         });
-        ItemCollectables.log("Loaded collectors successfully!");
     }
 }

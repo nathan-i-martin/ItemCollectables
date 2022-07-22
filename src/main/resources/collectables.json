@@ -2,7 +2,7 @@
     "collectables": {
         "green crystal": {
             "gui": {
-                "slot-index": "1",
+                "slot-index": 1,
                 "lore": ""
             },
             "location": {

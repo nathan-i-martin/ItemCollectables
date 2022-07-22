@@ -17,9 +17,13 @@ import java.util.Map;
 
 public class ConfigLoader {
 
-    public static boolean loadRootConfig(Map<String, JsonObject> configs, ItemCollectables itemCollectables) {
+    public static boolean loadRootConfig(Map<String, JsonObject> configs, ItemCollectables itemCollectables, MySQL mySQL) {
         ItemCollectables.log("> Preparing config.json...");
+
         configs.put("config", ItemCollectables.createCustomConfig("config.json"));
+
+        ItemCollectables.log("> > Parsing config.json...");
+
         {
             try {
                 ItemCollectables.log("> > Loading database info...");
@@ -32,26 +36,31 @@ public class ConfigLoader {
                 String user =       databaseJSON.get("user").getAsString();
                 String password =   databaseJSON.get("password").getAsString();
 
-                itemCollectables.setMySQL(new MySQL(host, port, database, user, password));
+                mySQL.setConnection(host, port, database, user, password);
 
                 ItemCollectables.log("> > Loading plugin type info...");
                 String pluginType = configs.get("config").get("type").getAsString();
 
                 ItemCollectables.log("> > Setting plugin type...");
                 itemCollectables.setPluginType(PluginType.valueOf(pluginType));
+
+                itemCollectables.setItemSpawnDelay(configs.get("config").get("seconds-between-item-spawn-attempt").getAsInt() * 20);
             } catch (Exception e) {
                 ItemCollectables.log("Unable to register config.yml! Make sure you are using valid json!");
                 Bukkit.getPluginManager().disablePlugin(ItemCollectables.getProvidingPlugin(ItemCollectables.class));
+                return false;
             }
         }
         ItemCollectables.log("Finished preparing config.json!");
         return true;
     }
 
-    public static boolean saveCollectables(Map<String, JsonObject> configs, MySQL mySQL) {
+    public static boolean saveCollectables(Map<String, JsonObject> configs, MySQL mySQL) throws ExceptionInInitializerError {
         ItemCollectables.log("> Registering collectables.json...");
 
         configs.put("collectables", ItemCollectables.createCustomConfig("collectables.json"));
+
+        ItemCollectables.log("> > Parsing collectables.json...");
         // Get screens config
         JsonObject collectiblesJSON = configs.get("collectables").getAsJsonObject("collectables");
         assert !collectiblesJSON.isJsonObject() : "Your config file is corrupt! Are you sure that you've balanced your brackets?";
@@ -70,19 +79,20 @@ public class ConfigLoader {
                             collectibleLocation.get("y").getAsDouble(),
                             collectibleLocation.get("z").getAsDouble()
                     );
-                    double activeRadius = collectibleJSON.get("active-radius").getAsDouble();
+                    double activeRadius = collectibleLocation.get("active-radius").getAsDouble();
 
                     try {
                         Material material = Material.getMaterial(collectibleJSON.get("material").getAsString());
                         boolean isEnchanted = collectibleJSON.get("enchanted").getAsBoolean();
-                        boolean isGlowing = collectibleJSON.get("material").getAsBoolean();
+                        boolean isGlowing = collectibleJSON.get("glowing").getAsBoolean();
                         Integer customModelData = collectibleJSON.get("custom-model-data").getAsInt();
 
                         JsonObject guiJSON = collectibleJSON.getAsJsonObject("gui");
                         String lore = guiJSON.get("lore").getAsString();
                         Integer guiSlotIndex = guiJSON.get("slot-index").getAsInt();
-                        String familyName = guiJSON.get("family-name").getAsString();
+                        String familyName = collectibleJSON.get("family-name").getAsString();
 
+                        ItemCollectables.log("> > > Saving collectables to database...");
                         Collectable.save(
                                 mySQL,
                                 collectibleEntry.getKey(),
@@ -98,13 +108,11 @@ public class ConfigLoader {
                         );
 
                     } catch (Exception e) {
-                        ItemCollectables.log("All collectibles must have `material` defined! Failed at: " + collectibleEntry.getKey());
-                        Bukkit.getPluginManager().disablePlugin(ItemCollectables.getProvidingPlugin(ItemCollectables.class));
+                        throw new ExceptionInInitializerError();
                     }
 
                 } catch (Exception e) {
-                    ItemCollectables.log("All collectibles must have location `x` `y` `z` `world` and `active-radius` defined! Failed at: " + collectibleEntry.getKey());
-                    Bukkit.getPluginManager().disablePlugin(ItemCollectables.getProvidingPlugin(ItemCollectables.class));
+                    throw new ExceptionInInitializerError();
                 }
             }
         }
@@ -112,36 +120,56 @@ public class ConfigLoader {
         return true;
     }
 
-    public static boolean saveFamilies(Map<String, JsonObject> configs, MySQL mySQL) {
+    public static boolean saveFamilies(Map<String, JsonObject> configs, MySQL mySQL) throws ExceptionInInitializerError {
         ItemCollectables.log("> Registering families.json...");
 
         configs.put("families", ItemCollectables.createCustomConfig("families.json"));
-        // Get screens config
-        JsonObject familiesJSON = configs.get("families").getAsJsonObject("families");
-        assert !familiesJSON.isJsonObject() : "Your config file is corrupt! Are you sure that you've balanced your brackets? Failed before parsing families!";
-        {
-            ItemCollectables.log("> > Registering families...");
-            for (Map.Entry<String, JsonElement> familyEntry : familiesJSON.entrySet()) {
-                JsonObject familyJSON = familyEntry.getValue().getAsJsonObject();
-                assert !familyJSON.isJsonObject() : "Your config file is corrupt! Are you sure that you've balanced your brackets? Failed while parsing families!";
 
-                Integer guiRows = familyJSON.get("gui-rows").getAsInt();
+        ItemCollectables.log("> > Parsing families.json...");
+        try {
+            // Get screens config
+            JsonObject familiesJSON = configs.get("families").getAsJsonObject("families");
+            assert !familiesJSON.isJsonObject() : "Your config file is corrupt! Are you sure that you've balanced your brackets? Failed before parsing families!";
+            {
+                ItemCollectables.log("> > Registering families...");
+                for (Map.Entry<String, JsonElement> familyEntry : familiesJSON.entrySet()) {
+                    JsonObject familyJSON = familyEntry.getValue().getAsJsonObject();
+                    assert !familyJSON.isJsonObject() : "Your config file is corrupt! Are you sure that you've balanced your brackets? Failed while parsing families!";
 
-                Family.save(
-                        mySQL,
-                        familyEntry.getKey(),
-                        guiRows
-                );
+                    JsonObject familyItemJSON = familyJSON.get("icon").getAsJsonObject();
+                    Material familyItemMaterial = Material.getMaterial(familyItemJSON.get("material").getAsString());
+                    Integer familyItemCMD = familyItemJSON.get("custom-model-data").getAsInt();
+
+                    JsonObject missingGUIItemJSON = familyJSON.get("missing-collectable").getAsJsonObject();
+                    Material missingGUIItemMaterial = Material.getMaterial(missingGUIItemJSON.get("material").getAsString());
+                    Integer missingGUIItemCMD = missingGUIItemJSON.get("custom-model-data").getAsInt();
+
+                    Integer guiRows = familyJSON.get("gui-rows").getAsInt();
+
+                    ItemCollectables.log("> > > Saving families to database...");
+
+                    Family.save(
+                            mySQL,
+                            familyEntry.getKey(),
+                            guiRows,
+                            familyItemMaterial,
+                            familyItemCMD,
+                            missingGUIItemMaterial,
+                            missingGUIItemCMD
+                    );
+                }
             }
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError();
         }
         ItemCollectables.log("Successfully registered families.json!");
         return true;
     }
 
-    public static boolean loadGUIs() {
+    public static boolean loadGUIs() throws ExceptionInInitializerError {
         ItemCollectables.log("Preparing Family GUI interfaces...");
         Family.getAll().forEach(family -> {
-            family.bindGUI(BagViewer.constructNew("Collectables", family));
+            //family.bindGUI(BagViewer.constructNew("Collectables", family));
         });
         ItemCollectables.log("Finished preparing GUI interfaces!");
         return true;

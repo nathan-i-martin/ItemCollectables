@@ -1,42 +1,78 @@
-package group.aelysium.itemcollectables.lib.collector;
+package group.aelysium.itemcollectables.lib.collector.models;
 
 import group.aelysium.itemcollectables.ItemCollectables;
 import group.aelysium.itemcollectables.lib.MySQL;
 import group.aelysium.itemcollectables.lib.collectible.models.Bag;
+import group.aelysium.itemcollectables.lib.collectible.models.Collectable;
 import group.aelysium.itemcollectables.lib.collectible.models.Family;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class Collector {
-    private static List<Collector> registeredCollectors;
+    private static final List<Collector> registeredCollectors = new ArrayList<>();
 
     public UUID uuid;
-    public List<Bag> bags;
+    public List<Bag> bags = new ArrayList<>();
 
     public Collector(UUID uuid) {
         this.uuid = uuid;
     }
 
-    public static void saveCollectableInBag(MySQL mySQL, UUID uuid, String collectableName) {
+    public static void saveCollectableInBag(MySQL mySQL, UUID uuid, String collectableName) throws SQLException {
+        Connection conn = mySQL.getConnection();
+
+        PreparedStatement request = conn.prepareStatement(
+                "REPLACE INTO " +
+                        "player_collectables(uuid, collectable_name) " +
+                        "VALUES(?, ?);"
+        );
+        request.setString(1,uuid.toString());
+        request.setString(2,collectableName);
+        request.execute();
+    }
+
+    public static Collector getRemote(MySQL mySQL, UUID uuid) {
         try {
             Connection conn = mySQL.getConnection();
 
             PreparedStatement request = conn.prepareStatement(
-                    "INSERT INTO " +
-                            "player_collectables(uuid, collectable_name)" +
-                            "VALUES(?, ?);"
+                    "SELECT * FROM player_collectables t1 " +
+                            "INNER JOIN collectables t2 " +
+                            "USING(collectable_name) " +
+                            "AND t1.uuid = \"?\";"
             );
-            request.setString(0,uuid.toString());
-            request.setString(1,collectableName);
-            request.execute();
+            request.setString(1,uuid.toString());
+            ResultSet response = request.executeQuery();
+
+            Collector collector = new Collector(uuid);
+
+            if(!response.next()) return null;
+
+            while (response.next()) {
+                Family family = Family.find(response.getString("family-name"));
+                if(family == null) continue;
+
+                Bag bag = collector.findBag(response.getString("family-name"));
+                if(bag == null) {
+                    bag = new Bag(family);
+                    collector.holdBag(bag);
+                }
+
+                Collectable collectable = family.findCollectable(response.getString("collectable-name"));
+                if(collectable == null) continue;
+
+                bag.add(collectable.name);
+            }
+
+            return collector;
         } catch (SQLException e) {
-            ItemCollectables.log("Unable to save Collectable to the players bag!");
+            return null;
         }
     }
 
@@ -47,11 +83,23 @@ public class Collector {
             PreparedStatement request = conn.prepareStatement(
                     "DELETE FROM player_collectables WHERE uuid='?';"
             );
-            request.setString(0,uuid.toString());
+            request.setString(1,uuid.toString());
             request.execute();
         } catch (SQLException e) {
             ItemCollectables.log("Unable to empty that player's bags!");
         }
+    }
+
+    public static Collector getReliably(UUID uuid, MySQL mySQL) {
+        Collector collector = Collector.find(uuid);
+        if(collector == null) {
+            collector = Collector.getRemote(mySQL, uuid);
+
+            if(collector == null) collector = new Collector(uuid);
+
+            Collector.register(collector);
+        }
+        return collector;
     }
 
     /**
@@ -70,6 +118,18 @@ public class Collector {
      * @return A Bag or `null` if none is found
      */
     public Bag findBag(Family family) {
+        Optional<Bag> response = this.bags.stream().filter(bag -> Objects.equals(bag.family, family)).findFirst();
+        return response.orElse(null);
+    }
+
+    /**
+     * Find a bag that was given to this Collector
+     * @param familyName The family that the bag is associated with
+     * @return Bag
+     */
+    public Bag findBag(String familyName) {
+        Family family = Family.find(familyName);
+        if(family == null) return null;
         Optional<Bag> response = bags.stream().filter(bag -> Objects.equals(bag.family, family)).findFirst();
         return response.orElse(null);
     }
@@ -85,14 +145,18 @@ public class Collector {
         return false;
     }
 
+    public Player getPlayer() {
+        return Bukkit.getPlayer(this.uuid);
+    }
 
 
-    /**
-     * Categorize a collectible as part of this family
-     * @param collector The collectible to add
-     */
-    public static void add(Collector collector) {
+    public static Collector register(Collector collector) {
         registeredCollectors.add(collector);
+        return collector;
+    }
+
+    public static void unRegister(Collector collector) {
+        registeredCollectors.remove(collector);
     }
 
     /**

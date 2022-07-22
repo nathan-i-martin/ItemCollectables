@@ -3,7 +3,6 @@ version: '${project.version}'
 main: group.aelysium.itemcollectables.ItemCollectables
 api-version: 1.16
 authors: [ Sivin ]
-depend: [ ProtocolLib ]
 commands:
   ItemCollectables:
     description: Used to manage ItemCollectables

@@ -2,21 +2,19 @@ package group.aelysium.itemcollectables.lib.collectible.models;
 
 import group.aelysium.itemcollectables.ItemCollectables;
 import group.aelysium.itemcollectables.lib.MySQL;
-import net.kyori.adventure.text.Component;
+import group.aelysium.itemcollectables.lib.gui.models.GUI;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Iterator;
 
 public class Collectable {
     public String name;
@@ -46,76 +44,55 @@ public class Collectable {
 
         this.customModelData = customModelData;
 
-        this.item = Collectable.createItem(this.material, this.isEnchanted, this.customModelData, this.name, this.lore);
+        this.item = GUI.createItem(this.material, this.isEnchanted, this.customModelData, this.name, this.lore);
     }
 
-    public static void save(MySQL mySQL, String name, String lore, Material material, Location location, double activeRadius, boolean isGlowing, boolean isEnchanted, Integer guiSlotIndex, Integer customModelData, String familyName) {
+    public static void save(MySQL mySQL, String name, String lore, Material material, Location location, double activeRadius, boolean isGlowing, boolean isEnchanted, Integer guiSlotIndex, Integer customModelData, String familyName) throws ExceptionInInitializerError {
         try {
             Connection conn = mySQL.getConnection();
 
             PreparedStatement request = conn.prepareStatement(
                     "INSERT INTO " +
-                            "collectables(name, lore, gui_slot_index, material, x, y, z, world, active_radius, enchanted, glowing, custom_model_data, family_name)" +
+                            "collectables(collectable_name, lore, gui_slot_index, material, x, y, z, world, active_radius, enchanted, glowing, custom_model_data, family_name)" +
                             "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
             );
-            request.setString(0,name);
-            request.setString(1,lore);
-            request.setInt   (2,guiSlotIndex);
-            request.setString(3,material.toString());
-            request.setDouble(4,location.getX());
-            request.setDouble(5,location.getY());
-            request.setDouble(6,location.getZ());
-            request.setString(7,location.getWorld().toString());
-            request.setDouble(8,activeRadius);
-            request.setBoolean(9,isGlowing);
-            request.setBoolean(10,isEnchanted);
-            request.setDouble(11,customModelData);
-            request.setString(12,familyName);
+            request.setString(1,name);
+            request.setString(2,lore);
+            request.setInt   (3,guiSlotIndex);
+            request.setString(4,material.toString());
+            request.setDouble(5,location.getX());
+            request.setDouble(6,location.getY());
+            request.setDouble(7,location.getZ());
+            request.setString(8,location.getWorld().getName());
+            request.setDouble(9,activeRadius);
+            request.setBoolean(10,isGlowing);
+            request.setBoolean(11,isEnchanted);
+            request.setDouble(12,customModelData);
+            request.setString(13,familyName);
             request.execute();
         } catch (SQLException e) {
             ItemCollectables.log("Unable to save Collectable: "+name);
+            throw new ExceptionInInitializerError();
         }
     }
 
     public void render(Family family) {
         Collection<Player> players = location.getNearbyEntitiesByType(Player.class, this.activeRadius);
-
         if(players.isEmpty()) return;
 
-        while(players.iterator().hasNext()) {
-            Player player = players.iterator().next();
+        Collection<Item> items = location.getNearbyEntitiesByType(Item.class, 1);
+        if(!items.isEmpty()) {
+            for (Item item : items)
+                if (item.hasMetadata("collectible-name") || item.hasMetadata("collectible-family")) return;
         }
 
         Item item = this.location.getWorld().dropItem(location,this.item);
              if(this.isGlowing) item.setGlowing(true);
-             item.setPickupDelay(30);
+             item.setPickupDelay(100);
 
              item.setMetadata("collectible-name",   new FixedMetadataValue(ItemCollectables.getProvidingPlugin(ItemCollectables.class),this.name));
              item.setMetadata("collectible-family", new FixedMetadataValue(ItemCollectables.getProvidingPlugin(ItemCollectables.class),family.name));
-    }
 
-    public static ItemStack createItem(Material material, boolean isEnchanted, Integer customModelData, String title, String lore) {
-        ItemStack itemStack = new ItemStack(material,1);
-        ItemMeta itemMeta = itemStack.getItemMeta();
-            if(!(customModelData == null)) itemMeta.setCustomModelData(customModelData);
-        if(isEnchanted) {
-            itemMeta.addEnchant(Enchantment.DURABILITY, 1, true);
-            itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
-        if(!title.isEmpty()) {
-            itemMeta.displayName(Component.text(title));
-        }
-        if(!lore.isEmpty()) {
-            itemMeta.displayName(Component.text(lore));
-        }
-        if(isEnchanted) {
-            itemMeta.addEnchant(Enchantment.DURABILITY, 1, true);
-            itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
-
-            itemStack.setItemMeta(itemMeta);
-
-        return itemStack;
-
+             item.setTicksLived(5000); // Will make the item despawn after 1000 ticks or 50 seconds
     }
 }

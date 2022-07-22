@@ -1,43 +1,66 @@
 package group.aelysium.itemcollectables.lib.collectible.models;
 
 import group.aelysium.itemcollectables.ItemCollectables;
+import group.aelysium.itemcollectables.gui.BagSelector;
+import group.aelysium.itemcollectables.gui.BagViewer;
 import group.aelysium.itemcollectables.lib.MySQL;
+import group.aelysium.itemcollectables.lib.collector.models.Collector;
 import group.aelysium.itemcollectables.lib.gui.models.GUI;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 public class Family {
-    private static List<Family> registeredFamilies;
+    private static final List<Family> registeredFamilies = new ArrayList<>();
 
     public String name;
     public Integer guiRows;
-    public List<Collectable> collectables;
+    public List<Collectable> collectables = new ArrayList<>();
+    public ItemStack item;
+    public ItemStack itemIfMissingCollectable;
     private GUI gui;
 
-    public Family(String name, Integer guiRows) {
+    public Family(String name, Integer guiRows, Material familyItemMaterial, Integer familyItemCMD, Material missingGUIItemMaterial, Integer missingGUIItemCMD) {
         this.name = name;
         this.guiRows = guiRows;
+
+        this.item = GUI.createItem(familyItemMaterial, false, familyItemCMD, this.name, "Click to view");
+        this.itemIfMissingCollectable = GUI.createItem(missingGUIItemMaterial, false, missingGUIItemCMD, this.name, "Click to view");
     }
 
-    public static void save(MySQL mySQL, String name, Integer guiRows) {
-        try {
-            Connection conn = mySQL.getConnection();
+    public static void openFamilySelectorGUI(Player player) {
+        BagSelector.constructNew(player).openInventory(player);
+    }
 
-            PreparedStatement request = conn.prepareStatement(
+    public static void save(MySQL mySQL, String name, Integer guiRows, Material familyItemMaterial, Integer familyItemCMD, Material missingGUIItemMaterial, Integer missingGUIItemCMD) throws ExceptionInInitializerError {
+        try {
+            Connection connection = mySQL.getConnection();
+
+            PreparedStatement request = connection.prepareStatement(
                     "INSERT INTO " +
-                            "families(name, gui_rows)" +
-                            "VALUES(?, ?);"
+                            "families(family_name, gui_rows, family_icon_material, family_icon_CMD, gui_missing_item_material, gui_missing_item_CMD) " +
+                            "VALUES(?, ?, ?, ?, ?, ?);"
             );
-            request.setString(0,name);
-            request.setInt(1,guiRows);
+            request.setString(1,name);
+            request.setInt(2,guiRows);
+            request.setString(3,familyItemMaterial.toString());
+            request.setInt(4,familyItemCMD);
+            request.setString(5,missingGUIItemMaterial.toString());
+            request.setInt(6,missingGUIItemCMD);
             request.execute();
         } catch (SQLException e) {
+            e.printStackTrace();
             ItemCollectables.log("Unable to save Family: "+name);
+            throw new ExceptionInInitializerError();
         }
     }
 
@@ -55,7 +78,7 @@ public class Family {
 
     /**
      * Find a family from the list of registered families
-     * @param name The name of the family to get
+     * @param family The name of the family to get
      * @return A Family or `null` if none is found
      */
     public static void register(Family family) {
@@ -107,5 +130,10 @@ public class Family {
     public Collectable findCollectable(String name) {
         Optional<Collectable> response = this.collectables.stream().filter(collectable -> Objects.equals(collectable.name, name)).findFirst();
         return response.orElse(null);
+    }
+
+    public GUI openCollectorBagGUI(Player player, Collector collector, Family family) {
+        Bag bag = collector.findBag(family); // If Bag is null, we pass it anyways
+        return BagViewer.constructNew(player, bag, family);
     }
 }

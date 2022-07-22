@@ -1,9 +1,10 @@
 package group.aelysium.itemcollectables.lib.collectible.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Bag {
-    public List<String> collectibles;
+    public List<String> collectibles = new ArrayList<>();
     public Family family;
 
     public Bag(Family family) {

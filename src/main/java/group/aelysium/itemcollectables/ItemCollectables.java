@@ -2,7 +2,9 @@ package group.aelysium.itemcollectables;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import group.aelysium.itemcollectables.commands.BagCommand;
 import group.aelysium.itemcollectables.commands.ItemCollectablesCommand;
+import group.aelysium.itemcollectables.engine.ItemSpawn;
 import group.aelysium.itemcollectables.init.ConfigLoader;
 import group.aelysium.itemcollectables.init.ModelLoader;
 import group.aelysium.itemcollectables.lib.MySQL;
@@ -10,6 +12,7 @@ import group.aelysium.itemcollectables.lib.collectible.events.OnItemPickup;
 import group.aelysium.itemcollectables.lib.generic.PluginType;
 import group.aelysium.itemcollectables.lib.gui.events.OnInventoryClick;
 import group.aelysium.itemcollectables.lib.gui.events.OnInventoryDrag;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
@@ -21,23 +24,24 @@ import java.io.*;
 import java.util.*;
 
 public final class ItemCollectables extends JavaPlugin implements Listener {
+    private Integer itemSpawnDelay = 300;
     private PluginType pluginType;
-    private MySQL mySQL;
+    private final MySQL mySQL = new MySQL();
     private DataSource dataSource;
     public Map<String, JsonObject> configs = new HashMap<>();
-
-    public void setMySQL(MySQL mySQL) { this.mySQL = mySQL; }
     public void setPluginType(PluginType pluginType) { this.pluginType = pluginType; }
+    public void setItemSpawnDelay(Integer itemSpawnDelay) { this.itemSpawnDelay = itemSpawnDelay; }
 
     @Override
     public void onEnable() {
-        registerConfigs();
-
-        mySQL.connect();
+        if(!registerConfigs()) return;
 
         registerCommands();
 
         registerEvents();
+
+        ItemSpawn itemSpawn = new ItemSpawn();
+        itemSpawn.runTaskTimer(this, 10, this.itemSpawnDelay);
 
         log("Started Successfully!");
     }
@@ -52,6 +56,7 @@ public final class ItemCollectables extends JavaPlugin implements Listener {
      */
     public void registerCommands() {
         this.getCommand("ItemCollectables").setExecutor(new ItemCollectablesCommand());
+        this.getCommand("bag").setExecutor(new BagCommand(this.mySQL));
 
     }
 
@@ -70,34 +75,43 @@ public final class ItemCollectables extends JavaPlugin implements Listener {
     /**
      * Register the plugin's config files
      */
-    public void registerConfigs() {
+    public boolean registerConfigs() {
         ItemCollectables.log("Initalizing plugin...");
 
-        ConfigLoader.loadRootConfig(this.configs, this);
+        ConfigLoader.loadRootConfig(this.configs, this, mySQL);
 
-        if(this.pluginType == PluginType.ROOT) {
-            mySQL.init(this);
+        try {
+            mySQL.connect();
 
-            ConfigLoader.saveFamilies(this.configs, mySQL);
-            ConfigLoader.saveCollectables(this.configs,mySQL);
+            if(this.pluginType == PluginType.ROOT) {
+                mySQL.init(this);
 
-            ModelLoader.loadFamilies(mySQL);
-            ModelLoader.loadCollectables(mySQL);
+                ConfigLoader.saveFamilies(this.configs, mySQL);
+                ConfigLoader.saveCollectables(this.configs,mySQL);
 
-            ModelLoader.loadCollectors(mySQL);
+                ModelLoader.loadFamilies(mySQL);
+                ModelLoader.loadCollectables(mySQL);
 
-            ConfigLoader.loadGUIs();
+                ModelLoader.loadCollectors(mySQL);
+
+                ConfigLoader.loadGUIs();
+            }
+            if(this.pluginType == PluginType.BRANCH) {
+                ModelLoader.loadFamilies(mySQL);
+                ModelLoader.loadCollectables(mySQL);
+
+                ModelLoader.loadCollectors(mySQL);
+
+                ConfigLoader.loadGUIs();
+            }
+
+            ItemCollectables.log("Finished registering configs!");
+            return true;
+        } catch (ExceptionInInitializerError e) {
+            e.printStackTrace();
+            Bukkit.getPluginManager().disablePlugin(this);
         }
-        if(this.pluginType == PluginType.BRANCH) {
-            ModelLoader.loadFamilies(mySQL);
-            ModelLoader.loadCollectables(mySQL);
-
-            ModelLoader.loadCollectors(mySQL);
-
-            ConfigLoader.loadGUIs();
-        }
-
-        ItemCollectables.log("Finished registering configs!");
+        return false;
     }
 
     /**
