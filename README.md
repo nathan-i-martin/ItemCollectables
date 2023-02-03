@@ -1,6 +1,8 @@
 # ItemCollectables
 ItemCollectables is a small plugin built for a handful of projects that needed to provide a quick and easy collectables system.
 
+## Version: Minecraft Java 1.16+
+
 > Sync collectables data across multiple servers.
 > Spawn collectables into your Minecraft world for players to find.
 > Sync a player's progress across multiple servers.
